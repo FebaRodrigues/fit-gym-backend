@@ -2,13 +2,31 @@
 
 const mongoose = require('mongoose');
 
+// Cache the database connection
+let cachedDb = null;
+
 const connectDB = async () => {
    try {
-        // Use MONGO_URI to match the .env file
-        const mongoUri = process.env.MONGO_URI;
+        // If we already have a connection, use it
+        if (cachedDb && mongoose.connection.readyState === 1) {
+            console.log('Using cached database connection');
+            return;
+        }
+        
+        // Check for both environment variable names to ensure compatibility
+        const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
         
         if (!mongoUri) {
-            throw new Error('MONGO_URI is not defined in environment variables');
+            throw new Error('Neither MONGO_URI nor MONGODB_URI is defined in environment variables');
+        }
+        
+        // Set both environment variables to ensure consistency
+        if (!process.env.MONGO_URI && process.env.MONGODB_URI) {
+            process.env.MONGO_URI = process.env.MONGODB_URI;
+            console.log('Set MONGO_URI from MONGODB_URI');
+        } else if (process.env.MONGO_URI && !process.env.MONGODB_URI) {
+            process.env.MONGODB_URI = process.env.MONGO_URI;
+            console.log('Set MONGODB_URI from MONGO_URI');
         }
         
         // Set mongoose options for better connection handling
@@ -28,13 +46,20 @@ const connectDB = async () => {
         
         console.log('Connecting to MongoDB Atlas...');
         await mongoose.connect(mongoUri, options);
+        cachedDb = mongoose.connection;
         
-        // Display more detailed connection information
-        const dbName = mongoose.connection.db.databaseName;
-        console.log('=== MongoDB Connection Successful ===');
-        console.log(`Connected to database: ${dbName}`);
-        console.log(`Connection state: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Not connected'}`);
-        console.log(`MongoDB version: ${await mongoose.connection.db.admin().serverInfo().then(info => info.version)}`);
+        // Display more detailed connection information after successful connection
+        if (mongoose.connection.readyState === 1) {
+            try {
+                const dbName = mongoose.connection.db.databaseName;
+                console.log('=== MongoDB Connection Successful ===');
+                console.log(`Connected to database: ${dbName}`);
+                console.log(`Connection state: Connected`);
+                console.log('MongoDB connection established');
+            } catch (err) {
+                console.log('MongoDB connection established, but could not retrieve database name');
+            }
+        }
         
         // Drop the problematic index on the payments collection
         try {
@@ -87,16 +112,14 @@ const connectDB = async () => {
 };
 
 // Add a listener for MongoDB connection events
-mongoose.connection.on('connected', () => {
-    console.log('MongoDB connection established');
-});
-
 mongoose.connection.on('error', (err) => {
     console.error('MongoDB connection error:', err.message);
+    cachedDb = null;
 });
 
 mongoose.connection.on('disconnected', () => {
     console.warn('MongoDB connection disconnected');
+    cachedDb = null;
 });
 
 // Handle application termination

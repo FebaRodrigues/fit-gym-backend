@@ -29,8 +29,15 @@ if (fs.existsSync(serverEnvPath)) {
   console.log(`Server .env file not found at: ${serverEnvPath}`);
 }
 
-// If MONGO_URI is still not defined, try the root .env file
-if (!process.env.MONGO_URI) {
+// Check for production environment file
+const prodEnvPath = path.resolve(__dirname, '.env.production');
+if (fs.existsSync(prodEnvPath)) {
+  console.log(`Loading production .env from: ${prodEnvPath}`);
+  dotenv.config({ path: prodEnvPath });
+}
+
+// If MONGO_URI and MONGODB_URI are still not defined, try the root .env file
+if (!process.env.MONGO_URI && !process.env.MONGODB_URI) {
   const rootEnvPath = path.resolve(__dirname, '../../.env');
   if (fs.existsSync(rootEnvPath)) {
     console.log(`Loading .env from: ${rootEnvPath}`);
@@ -40,13 +47,22 @@ if (!process.env.MONGO_URI) {
   }
 }
 
+// Make sure both MONGO_URI and MONGODB_URI are set if either one is available
+if (process.env.MONGODB_URI && !process.env.MONGO_URI) {
+  process.env.MONGO_URI = process.env.MONGODB_URI;
+  console.log('Set MONGO_URI from MONGODB_URI');
+} else if (process.env.MONGO_URI && !process.env.MONGODB_URI) {
+  process.env.MONGODB_URI = process.env.MONGO_URI;
+  console.log('Set MONGODB_URI from MONGO_URI');
+}
+
 // Connect to MongoDB
 const connectDB = require('./config/db');
 connectDB();
 
 // Verify critical environment variables
-if (!process.env.MONGO_URI) {
-  console.error('ERROR: MONGO_URI is not defined in environment variables');
+if (!process.env.MONGO_URI && !process.env.MONGODB_URI) {
+  console.error('ERROR: Neither MONGO_URI nor MONGODB_URI is defined in environment variables');
 }
 
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -70,9 +86,18 @@ app.use(session({
 // Parse JSON body
 app.use(express.json());
 
-// Configure CORS
+// Detect serverless environment
+const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.LAMBDA_TASK_ROOT;
+
+// CORS configuration - update to include the deployed frontend URL
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'],
+  origin: [
+    'http://localhost:5173', 
+    'http://localhost:5174', 
+    'http://localhost:5175',
+    process.env.CLIENT_URL,
+    'https://fitness-tracker-frontend-amber.vercel.app',
+  ].filter(Boolean),
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -80,21 +105,23 @@ app.use(cors({
 
 // Serve static files from the public directory
 const publicDir = path.join(__dirname, 'public');
-if (!fs.existsSync(publicDir)) {
-  console.log(`Public directory not found at: ${publicDir}`);
-  // Create the directory
-  try {
-    fs.mkdirSync(path.join(publicDir, 'uploads'), { recursive: true });
-    console.log(`Created public uploads directory at: ${path.join(publicDir, 'uploads')}`);
-  } catch (err) {
-    console.error('Error creating public uploads directory:', err);
+if (!isServerless) {
+  if (!fs.existsSync(publicDir)) {
+    console.log(`Public directory not found at: ${publicDir}`);
+    // Create the directory
+    try {
+      fs.mkdirSync(path.join(publicDir, 'uploads'), { recursive: true });
+      console.log(`Created public uploads directory at: ${path.join(publicDir, 'uploads')}`);
+    } catch (err) {
+      console.error('Error creating public uploads directory:', err);
+    }
   }
+  // Serve static files
+  console.log(`Serving static files from: ${publicDir}`);
+  app.use(express.static(publicDir));
+} else {
+  console.log('Running in serverless environment - skipping file uploads setup');
 }
-
-// Serve static files
-console.log(`Serving static files from: ${publicDir}`);
-app.use(express.static(publicDir));
-app.use('/uploads', express.static(path.join(publicDir, 'uploads')));
 
 // Enhanced request logging middleware
 app.use((req, res, next) => {
