@@ -1,0 +1,130 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+server.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Directory for uploaded files
+public/uploads/*
+!public/uploads/.gitkeep
+
+# Test files
+/test
+/tests
+*.test.js
+*.spec.js
+test-*.js
+coverage/
+
+# Port configuration
+current-port.txt
+port.txt
+*.port
+
+# Development scripts
+check-server.ps1
+check-server-config.ps1
+ensure-port-*.ps1
+ensure-port-*.bat
+free-port-*.bat
+kill-node-processes.bat
+reset-connection.bat
+reset-and-start.bat
+diagnose-server.ps1
+
+# Local development
+*.local
+local.settings.json
+
+# Debug files
+debug/
+.debug/
+*.debug.js
+
+# Temporary files
+*.tmp
+*.temp
+.temp/
+*~
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Build output
+/dist
+/build
+.vercel
+
+# SSL certificates
+*.pem
+*.crt
+*.key
+
+# Backup files
+*.bak
+*.backup
+
+# MongoDB data directory
+/data/db/
+
+# Session data
+sessions/
+
+# Cache
+.cache/
+*.cache
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+yarn-debug.log
+
+# Environment variables
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Output of 'npm pack'
+*.tgz
+
+# IDE files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db

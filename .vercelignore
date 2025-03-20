@@ -1,0 +1,7 @@
+.env
+node_modules
+README.md
+*.log
+test-*.js
+restart-*.ps1
+*.bat 
