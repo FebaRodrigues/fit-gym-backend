@@ -6,7 +6,13 @@
     }
   ],
   "env": {
-    "VITE_API_URL": "https://fit-gym-backend-4d4q9q3t6-feba-rodrigues-projects.vercel.app/api"
+    "VITE_API_URL": "https://fit-gym-backend-4d4q9q3t6-feba-rodrigues-projects.vercel.app/api",
+    "VITE_SERVER_URL": "https://fit-gym-backend-4d4q9q3t6-feba-rodrigues-projects.vercel.app",
+    "VITE_APP_NAME": "TrackFit",
+    "VITE_DEMO_MODE": "false",
+    "VITE_ENABLE_STRIPE": "false",
+    "VITE_CLOUDINARY_CLOUD_NAME": "daacjyk3d",
+    "VITE_CLOUDINARY_UPLOAD_PRESET": "fitness_app_preset"
   },
   "headers": [
     {

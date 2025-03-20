@@ -4,10 +4,28 @@ import { resetPortDetection } from './utils/serverPortDetector';
 
 // Function to get the server URL
 export const getServerUrl = () => {
-    // Use environment variable for API URL, fallback to localhost for development
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5050/api';
+    // Use environment variables for API URL and Server URL
+    const apiUrl = import.meta.env.VITE_API_URL;
+    const serverUrl = import.meta.env.VITE_SERVER_URL;
+    
+    if (!apiUrl || !serverUrl) {
+        console.warn('Environment variables not found, using fallback URLs');
+        return 'http://localhost:5050/api';
+    }
+    
     console.log('Using API URL:', apiUrl);
+    console.log('Using Server URL:', serverUrl);
     return apiUrl;
+};
+
+// Function to get the base server URL (without /api)
+export const getBaseServerUrl = () => {
+    const serverUrl = import.meta.env.VITE_SERVER_URL;
+    if (!serverUrl) {
+        console.warn('VITE_SERVER_URL not found, using fallback');
+        return 'http://localhost:5050';
+    }
+    return serverUrl;
 };
 
 // Define API URL constant
