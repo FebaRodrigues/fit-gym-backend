@@ -159,10 +159,13 @@ const showServerNotRunningMessage = () => {
 // Add request interceptor to update baseURL if needed
 API.interceptors.request.use(
     (config) => {
-        // Update baseURL on each request to ensure we're using the latest port
-        const baseUrl = getServerUrl();
-        config.baseURL = baseUrl;
-        console.log(`API Request to: ${baseUrl}${config.url}`);
+        // Use the environment variables directly instead of recalculating
+        const apiUrl = import.meta.env.VITE_API_URL;
+        if (apiUrl) {
+            config.baseURL = apiUrl;
+        }
+        
+        console.log(`API Request to: ${config.baseURL}${config.url}`);
         
         // If server was previously down, but we're trying again, log it
         if (serverStatus.isDown && serverStatus.canCheck() && serverStatus.shouldRetry()) {
@@ -179,10 +182,18 @@ API.interceptors.request.use(
 
 // Function to update the server port
 export const updateServerPort = (port) => {
-    // Always use port 5050 regardless of the port parameter
-    console.log(`Requested port update to ${port}, but using fixed port 5050 to maintain data consistency`);
-    localStorage.setItem('serverPort', '5050');
-    API.defaults.baseURL = 'http://localhost:5050/api';
+    // Use environment variables instead of hardcoded localhost
+    const apiUrl = import.meta.env.VITE_API_URL;
+    const serverUrl = import.meta.env.VITE_SERVER_URL;
+    
+    if (apiUrl && serverUrl) {
+        console.log(`Using configured API URL: ${apiUrl}`);
+        API.defaults.baseURL = apiUrl;
+    } else {
+        console.warn('Environment variables not found, using fallback');
+        API.defaults.baseURL = 'http://localhost:5050/api';
+    }
+    
     console.log(`API baseURL updated to: ${API.defaults.baseURL}`);
 };
 
