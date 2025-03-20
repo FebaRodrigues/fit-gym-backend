@@ -6,8 +6,8 @@
     }
   ],
   "env": {
-    "VITE_API_URL": "https://fit-gym-backend-4d4q9q3t6-feba-rodrigues-projects.vercel.app/api",
-    "VITE_SERVER_URL": "https://fit-gym-backend-4d4q9q3t6-feba-rodrigues-projects.vercel.app",
+    "VITE_API_URL": "https://fit-gym-backend.vercel.app/api",
+    "VITE_SERVER_URL": "https://fit-gym-backend.vercel.app",
     "VITE_APP_NAME": "TrackFit",
     "VITE_DEMO_MODE": "false",
     "VITE_ENABLE_STRIPE": "false",
@@ -32,5 +32,10 @@
         }
       ]
     }
-  ]
+  ],
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "framework": "vite",
+  "outputDirectory": "dist"
 } 
