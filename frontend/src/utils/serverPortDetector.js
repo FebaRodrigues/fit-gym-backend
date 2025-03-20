@@ -1,74 +1,35 @@
 // src/utils/serverPortDetector.js
-import axios from 'axios';
-import { updateServerPort } from '../api';
+// This is a dummy version that doesn't actually connect to localhost
+
+// Get API URL from environment variables - NEVER use localhost in production
+const isProduction = window.location.hostname !== 'localhost';
+const API_URL = isProduction 
+  ? (import.meta.env.VITE_API_URL || 'https://fit-gym-backend.vercel.app/api') 
+  : 'http://localhost:5050/api';
 
 // Global variable to track if port detection is in progress
 let portDetectionPromise = null;
 
-// Function to get the server URL from environment variables
-const getServerURL = () => {
-    const serverUrl = import.meta.env.VITE_SERVER_URL;
-    return serverUrl || 'http://localhost:5050';
-};
-
-// Function to get the API URL from environment variables
-const getApiURL = () => {
-    const apiUrl = import.meta.env.VITE_API_URL;
-    return apiUrl || 'http://localhost:5050/api';
-};
-
-// Function to detect the server port
+// Function that does nothing but resolve immediately
 export const detectServerPort = async () => {
     // If detection is already in progress, return the existing promise
     if (portDetectionPromise) {
         return portDetectionPromise;
     }
     
-    // Create a new promise for port detection
+    // Create a new promise that resolves immediately
     portDetectionPromise = new Promise(async (resolve) => {
-        console.log('Server detection started...');
-        
-        const apiUrl = getApiURL();
-        
-        try {
-            console.log(`Trying to connect to ${apiUrl}/health...`);
-            const response = await axios.get(`${apiUrl}/health`, {
-                timeout: 5000 // Increased timeout for better chance of connection
-            });
-            
-            if (response.status === 200 || response.status === 404) {
-                console.log('Server connection confirmed');
-                resolve(true);
-                return true;
-            }
-        } catch (error) {
-            if (error.response) {
-                console.log('Server found (got response but not 200)');
-                resolve(true);
-                return true;
-            }
-            console.log('Server not responding, but will still proceed');
-        }
-        
-        // Always return true to allow the app to continue
-        console.log('Using configured API URL from environment variables');
+        console.log('Server connection - Using environment variables in production');
         resolve(true);
-        return true;
     });
     
-    // Reset the promise after 30 seconds to allow for fresh detection if needed
-    setTimeout(() => {
-        portDetectionPromise = null;
-    }, 30000);
-    
-    // Return the promise
     return portDetectionPromise;
 };
 
-// Reset the port detection promise (useful for testing or forcing a new detection)
+// Reset function that does nothing
 export const resetPortDetection = () => {
     portDetectionPromise = null;
-    console.log('Server detection reset');
+    console.log('Port detection reset - This is a no-op in production');
 };
 
 export default detectServerPort; 

@@ -2,34 +2,22 @@
 import axios from 'axios';
 import { resetPortDetection } from './utils/serverPortDetector';
 
-// Function to get the server URL
-export const getServerUrl = () => {
-    // Use environment variables for API URL and Server URL
-    const apiUrl = import.meta.env.VITE_API_URL;
-    const serverUrl = import.meta.env.VITE_SERVER_URL;
-    
-    if (!apiUrl || !serverUrl) {
-        console.warn('Environment variables not found, using fallback URLs');
-        return 'http://localhost:5050/api';
-    }
-    
-    console.log('Using API URL:', apiUrl);
-    console.log('Using Server URL:', serverUrl);
-    return apiUrl;
-};
+// Get API URL from environment variables - NEVER use localhost in production
+const isProduction = window.location.hostname !== 'localhost';
+const API_URL = isProduction 
+  ? (import.meta.env.VITE_API_URL || 'https://fit-gym-backend.vercel.app/api') 
+  : 'http://localhost:5050/api';
 
-// Function to get the base server URL (without /api)
-export const getBaseServerUrl = () => {
-    const serverUrl = import.meta.env.VITE_SERVER_URL;
-    if (!serverUrl) {
-        console.warn('VITE_SERVER_URL not found, using fallback');
-        return 'http://localhost:5050';
-    }
-    return serverUrl;
-};
+const SERVER_URL = isProduction
+  ? (import.meta.env.VITE_SERVER_URL || 'https://fit-gym-backend.vercel.app')
+  : 'http://localhost:5050';
 
-// Define API URL constant
-const API_URL = getServerUrl();
+console.log('Using API URL:', API_URL);
+console.log('Using Server URL:', SERVER_URL);
+
+// Export the URLs for use in other components
+export const getServerUrl = () => API_URL;
+export const getBaseServerUrl = () => SERVER_URL;
 
 // Initialize API with the server URL
 const API = axios.create({
@@ -40,6 +28,11 @@ const API = axios.create({
 
 // Add request interceptor for FormData and auth
 API.interceptors.request.use(config => {
+    // Override any attempt to use localhost in production
+    if (isProduction && config.baseURL.includes('localhost')) {
+        config.baseURL = API_URL;
+    }
+    
     console.log(`API Request: ${config.method.toUpperCase()} ${config.url}`);
     
     // For FormData, don't set Content-Type (browser will set it with boundary)
@@ -181,20 +174,14 @@ API.interceptors.request.use(
 );
 
 // Function to update the server port
-export const updateServerPort = (port) => {
-    // Use environment variables instead of hardcoded localhost
-    const apiUrl = import.meta.env.VITE_API_URL;
-    const serverUrl = import.meta.env.VITE_SERVER_URL;
-    
-    if (apiUrl && serverUrl) {
-        console.log(`Using configured API URL: ${apiUrl}`);
-        API.defaults.baseURL = apiUrl;
-    } else {
-        console.warn('Environment variables not found, using fallback');
-        API.defaults.baseURL = 'http://localhost:5050/api';
-    }
-    
-    console.log(`API baseURL updated to: ${API.defaults.baseURL}`);
+export const updateServerPort = () => {
+    // This is now a no-op since we use environment variables
+    console.log(`Using fixed API URL: ${API_URL}`);
+};
+
+// Mock function to maintain compatibility with serverPortDetector
+export const resetPortDetection = () => {
+    console.log("Port detection reset - This is a no-op in production");
 };
 
 // Cache for API data to prevent excessive API calls
@@ -835,44 +822,27 @@ export const getAdminUserMemberships = (userId) => {
 
 // User API
 export const loginUser = async (email, password) => {
+    console.log(`Attempting login with server at ${API.defaults.baseURL}`);
+    
     try {
-        // Clear any existing tokens before login
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('role');
-        localStorage.removeItem('userId');
+        // Force the production URL in production environment
+        if (isProduction && API.defaults.baseURL.includes('localhost')) {
+            console.log('Detected localhost in production environment, updating to production URL');
+            API.defaults.baseURL = API_URL;
+        }
         
-        // Always use port 5050 for the server
-        const serverPort = '5050';
-        const baseURL = `http://localhost:${serverPort}/api`;
-        
-        console.log(`Attempting login with server at ${baseURL}`);
-        
-        // Create a new axios instance for this request to ensure we use the latest port
-        const loginAPI = axios.create({
-            baseURL,
-            timeout: 5000 // Longer timeout for login
-        });
-        
-        const response = await loginAPI.post('/users/login', { email, password });
-        
-        // If login is successful, update the API baseURL
-        updateServerPort(serverPort);
-        
+        const response = await API.post('/users/login', { email, password });
         return response;
     } catch (error) {
         console.error('Login error:', error);
         
-        // Provide more detailed error messages
-        if (error.response && error.response.status === 401) {
-            throw new Error('Invalid email or password. Please try again.');
+        if (error.message.includes('Network Error') || error.code === 'ERR_NETWORK') {
+            if (isProduction) {
+                throw new Error('Cannot connect to server. Please try again later.');
+            } else {
+                throw new Error('Cannot connect to server. Please check if the server is running on port 5050.');
+            }
         }
-        
-        // Provide a more user-friendly error message for server connection issues
-        if (error.code === 'ERR_NETWORK') {
-            throw new Error('Cannot connect to server. Please check if the server is running on port 5050.');
-        }
-        
         throw error;
     }
 };
