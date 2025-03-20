@@ -6,8 +6,7 @@
     }
   ],
   "env": {
-    "VITE_API_URL": "@api_url",
-    "VITE_STRIPE_PUBLISHABLE_KEY": "@stripe_publishable_key"
+    "VITE_API_URL": "https://fit-gym-backend-4d4q9q3t6-feba-rodrigues-projects.vercel.app/api"
   },
   "headers": [
     {

@@ -2,12 +2,12 @@
 import axios from 'axios';
 import { resetPortDetection } from './utils/serverPortDetector';
 
-// Function to get the server URL with the correct port
+// Function to get the server URL
 export const getServerUrl = () => {
-    // Always use port 5050 for the server
-    console.log('Using fixed port 5050 for server connection');
-    localStorage.setItem('serverPort', '5050');
-    return 'http://localhost:5050/api';
+    // Use environment variable for API URL, fallback to localhost for development
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5050/api';
+    console.log('Using API URL:', apiUrl);
+    return apiUrl;
 };
 
 // Define API URL constant
