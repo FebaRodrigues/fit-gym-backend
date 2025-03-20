@@ -1,6 +1,6 @@
 // routes/users.js
 const express = require('express');
-const upload = require('./middleware/multer');
+const upload = require('../middleware/multer');
 const {
     register,
     login,
@@ -11,8 +11,8 @@ const {
     getConfirmedAppointments,
     updateUserFields,
     getProfile
-} = require('./controllers/userController');
-const { auth } = require('./middleware/auth');
+} = require('../controllers/userController');
+const { auth } = require('../middleware/auth');
 const router = express.Router();
 
 // Debug middleware for file uploads
