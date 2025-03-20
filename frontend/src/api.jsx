@@ -179,11 +179,6 @@ export const updateServerPort = () => {
     console.log(`Using fixed API URL: ${API_URL}`);
 };
 
-// Mock function to maintain compatibility with serverPortDetector
-export const resetPortDetection = () => {
-    console.log("Port detection reset - This is a no-op in production");
-};
-
 // Cache for API data to prevent excessive API calls
 const apiCache = {
     data: new Map(), // Map of endpoint -> data
