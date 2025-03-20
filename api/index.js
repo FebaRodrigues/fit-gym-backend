@@ -7,7 +7,7 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(cors({
-  origin: process.env.CLIENT_URL || '*',
+  origin: process.env.CORS_ORIGIN || '*',
   credentials: true
 }));
 
@@ -27,19 +27,26 @@ const connectDB = async () => {
   }
 };
 
-// Routes
+// Health check route
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'ok', message: 'Server is running' });
+  res.status(200).json({ 
+    status: 'ok', 
+    message: 'Server is running',
+    env: {
+      mongoUri: !!process.env.MONGODB_URI,
+      corsOrigin: process.env.CORS_ORIGIN || '*'
+    }
+  });
 });
 
 // Import route files
-const userRoutes = require('../routes/userRoutes');
-const trainerRoutes = require('../routes/trainerRoutes');
-const adminRoutes = require('../routes/adminRoutes');
-const paymentRoutes = require('../routes/paymentRoutes');
-const membershipRoutes = require('../routes/membershipRoutes');
-const workoutRoutes = require('../routes/workoutRoutes');
-const goalRoutes = require('../routes/goalRoutes');
+const userRoutes = require('./routes/userRoutes');
+const trainerRoutes = require('./routes/trainerRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
+const membershipRoutes = require('./routes/membershipRoutes');
+const workoutRoutes = require('./routes/workoutRoutes');
+const goalRoutes = require('./routes/goalRoutes');
 
 // Use routes
 app.use('/api/users', userRoutes);
